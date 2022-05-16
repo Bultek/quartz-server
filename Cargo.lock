@@ -799,7 +799,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "quarz-server"
+name = "quartz-server"
 version = "0.1.0"
 dependencies = [
  "rocket",
