@@ -28,6 +28,7 @@ impl Message {
     pub fn iter() -> impl Iterator<Item = &'static Message> {
         unsafe { MESSAGES.iter() }
     }
+    #[allow(non_snake_case)]
     pub fn Serialize(msg: Message) -> Json<Message> {
         Json(msg)
     }
@@ -62,6 +63,7 @@ fn incoming(target: &str) {
 struct T {
     messages: Vec<String>,
     senders: Vec<String>,
+    contacts: Vec<String>,
 }
 
 pub fn cpymsgvec(a: &Vec<Message>) -> Vec<Message> {
@@ -77,8 +79,8 @@ pub fn cpymsgvec(a: &Vec<Message>) -> Vec<Message> {
     return v;
 }
 
-#[get("/messages/<contact>")]
-async fn give_messages(contact: String) -> Json<T> {
+#[get("/messages")]
+async fn give_messages() -> Json<T> {
     let mut _messages: Vec<Message> = Vec::new();
     unsafe {
         // Copy messages
@@ -87,25 +89,25 @@ async fn give_messages(contact: String) -> Json<T> {
             println!("{}", _m.contact);
         }
     }
-    let mut _ms: Vec<Message> = Vec::new();
-    for m in _messages {
-        if m.contact == contact {
-            _ms.push(m);
-        }
-    }
+    //let mut _ms: Vec<Message> = Vec::new();
     let mut msgsenders: Vec<String> = Vec::new();
     let mut msmsgs: Vec<String> = Vec::new();
-    for msg in _ms {
+    let mut contacts: Vec<String> = Vec::new();
+    for msg in _messages {
+        let c = msg.contact.clone();
         let q = msg.sender.clone();
         let w = msg.message.clone();
         msgsenders.push(msg.sender);
         msmsgs.push(msg.message);
+        contacts.push(msg.contact);
         println!("{}", w);
         println!("{}", q);
+        println!("{}", c);
     }
     let hsh = T {
         messages: msmsgs,
         senders: msgsenders,
+        contacts: contacts,
     };
     // Return the JSON
     Json(hsh)
