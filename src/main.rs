@@ -1,21 +1,36 @@
 #[macro_use]
 extern crate rocket;
-use rocket::serde::{Serialize, json::Json};
+use rocket::serde::{json::Json, Serialize};
 pub static mut MESSAGES: Vec<Message> = Vec::new();
 
-#[allow(dead_code)]
 pub struct Message {
     message: String,
     contact: String,
     sender: String,
 }
 
-pub trait Iterator {
-    type Message;
-}
-
-pub trait Clone {
-    type Message;
+impl Message {
+    pub fn new(message: String, contact: String, sender: String) -> Message {
+        Message {
+            message,
+            contact,
+            sender,
+        }
+    }
+    pub fn clone(msg: Message) -> Message {
+        let m = Message {
+            message: msg.message.clone(),
+            contact: msg.contact.clone(),
+            sender: msg.sender.clone(),
+        };
+        return m;
+    }
+    pub fn iter() -> impl Iterator<Item = &'static Message> {
+        unsafe { MESSAGES.iter() }
+    }
+    pub fn Serialize(msg: Message) -> Json<Message> {
+        Json(msg)
+    }
 }
 
 // Accept JSON posts
@@ -42,20 +57,6 @@ fn incoming(target: &str) {
     }
 }
 
-
-pub fn cpymessagevec(_messages: &Vec<Message>) -> Vec<Message> {
-    
-    let mut _ms: Vec<Message> = Vec::new();
-    for _ms in _messages{
-        let _m = Message {
-            message: _ms.message.clone().to_string(),
-            contact: _ms.contact.clone().to_string(),
-            sender:  _ms.sender.clone().to_string(),
-        };
-        //println!("{}",_ms.message);
-    }
-    return _ms;
-}
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 struct T {
@@ -63,13 +64,25 @@ struct T {
     senders: Vec<String>,
 }
 
+pub fn cpymsgvec(a: &Vec<Message>) -> Vec<Message> {
+    let mut v: Vec<Message> = Vec::new();
+    for mess in a {
+        let msg = Message::new(
+            mess.message.clone(),
+            mess.contact.clone(),
+            mess.sender.clone(),
+        );
+        v.push(msg);
+    }
+    return v;
+}
+
 #[get("/messages/<contact>")]
 async fn give_messages(contact: String) -> Json<T> {
-    
     let mut _messages: Vec<Message> = Vec::new();
     unsafe {
         // Copy messages
-        _messages = cpymessagevec(&MESSAGES);
+        _messages = cpymsgvec(&MESSAGES);
         for _m in &_messages {
             println!("{}", _m.contact);
         }
@@ -98,11 +111,8 @@ async fn give_messages(contact: String) -> Json<T> {
     Json(hsh)
 }
 
-
-
 #[launch]
 async fn rocket() -> _ {
     // Start the server
-    rocket::build()
-        .mount("/", routes![incoming,give_messages])
+    rocket::build().mount("/", routes![incoming, give_messages])
 }
