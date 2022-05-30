@@ -18,12 +18,11 @@ impl Message {
         }
     }
     pub fn clone(msg: Message) -> Message {
-        let m = Message {
-            message: msg.message.clone(),
-            contact: msg.contact.clone(),
-            sender: msg.sender.clone(),
-        };
-        return m;
+        Message {
+            message: msg.message,
+            contact: msg.contact,
+            sender: msg.sender,
+        }
     }
     pub fn iter() -> impl Iterator<Item = &'static Message> {
         unsafe { MESSAGES.iter() }
@@ -76,7 +75,7 @@ pub fn cpymsgvec(a: &Vec<Message>) -> Vec<Message> {
         );
         v.push(msg);
     }
-    return v;
+    v
 }
 
 #[get("/messages")]
@@ -107,7 +106,7 @@ async fn give_messages() -> Json<T> {
     let hsh = T {
         messages: msmsgs,
         senders: msgsenders,
-        contacts: contacts,
+        contacts,
     };
     // Return the JSON
     Json(hsh)
